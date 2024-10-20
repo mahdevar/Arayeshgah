@@ -31,7 +31,6 @@ from datetime import datetime
 #minio_ = minio.fput_object('data', 'b', 'D:\\Download\\vidisco\\Vidisco ADMINISTRATION.rar')
 #exit()
 
-
 redis = Redis(**REDIS_CONFIG)
 #redis.set_response_callback('hmget', lambda i: [loads(v) for v in i])
 #d = {'a': '31'}
