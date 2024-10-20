@@ -14,7 +14,6 @@ from time import time
 from jdatetime import datetime as jdt, j_days_in_month
 
 
-
 from flask import abort, Flask, g, render_template, request, send_file
 from flask.wrappers import Response
 from minio import Minio
