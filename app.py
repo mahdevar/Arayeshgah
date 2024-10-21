@@ -9,12 +9,7 @@ from pathlib import Path
 from sys import gettrace
 from threading import Event, Semaphore, Thread
 from time import time
-
-
 from jdatetime import datetime as jdt, j_days_in_month
-
-
-
 from flask import abort, Flask, g, render_template, request, send_file
 from flask.wrappers import Response
 from minio import Minio
@@ -23,7 +18,6 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.pool import ThreadedConnectionPool as CreatePool
 from redis import Redis
 from pymongo import MongoClient
-
 from config import MINIO_CONFIG, MONGO_CONFIG, REDIS_CONFIG, SQL_CONFIG
 
 mongo = MongoClient(**MONGO_CONFIG)['a']
@@ -36,7 +30,6 @@ from datetime import datetime
 #minio_ = minio.fput_object('data', 'a', 'D:\\Download\\windowsdesktop-runtime-8.0.8-win-x64.exe')
 #minio_ = minio.fput_object('data', 'b', 'D:\\Download\\vidisco\\Vidisco ADMINISTRATION.rar')
 #exit()
-
 
 redis = Redis(**REDIS_CONFIG)
 #redis.set_response_callback('hmget', lambda i: [loads(v) for v in i])
@@ -69,9 +62,6 @@ def _execute_many_(*args, **kwargs):
 
 read_row = lambda *query: _execute_(*query).fetchone()
 read_table = lambda *query: _execute_(*query).fetchall()
-
-
-
 
 
 connection = connect(**SQL_CONFIG)
