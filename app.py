@@ -115,8 +115,11 @@ CSP_DIRECTIVES = {'connect': ['geolocation-db.com'], 'img': [], 'font': ['fonts.
 CONFIG['Content-Security-Policy'] = 'default-src \'none\';' + ' '.join('%s-src %s;' % (name, ' '.join(['\'self\''] + value)) for name, value in CSP_DIRECTIVES.items())
 # CONFIG['Content-Security-Policy'] = ''
 # Utility functions
-hash_string = lambda string: str(b32hexencode(sha1(string.encode('utf-8')).digest()))[2:-1]
-uuid = lambda prefix='': prefix + str(b32hexencode(urandom(20)))[2:-1]
+hash_string = lambda string: b32hexencode(sha1(string.encode()).digest()).decode()
+uuid = lambda prefix='': prefix + b32hexencode(urandom(20)).decode()
+
+
+
 to_json = lambda data: '{}' if data is None else dumps(data, ensure_ascii=False, separators=(',', ':'))
 json_response = lambda data: Response(to_json(data), mimetype='application/json')
 EMPTY = json_response({})
