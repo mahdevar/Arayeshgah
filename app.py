@@ -17,10 +17,10 @@ from psycopg2 import connect, OperationalError
 from psycopg2.extras import RealDictCursor
 from psycopg2.pool import ThreadedConnectionPool as CreatePool
 from redis import Redis
-from pymongo import MongoClient
-from config import MINIO_CONFIG, MONGO_CONFIG, REDIS_CONFIG, SQL_CONFIG
+#from pymongo import MongoClient
+import CONFIG
 
-mongo = MongoClient(**MONGO_CONFIG)['a']
+#mongo = MongoClient(**CONFIG.MONGO)['a']
 #mongo['c'].insert_one({'_id': 1, 'a': 'hello', 'b': 3.14})
 from datetime import datetime
 
@@ -31,7 +31,7 @@ from datetime import datetime
 #minio_ = minio.fput_object('data', 'b', 'D:\\Download\\vidisco\\Vidisco ADMINISTRATION.rar')
 #exit()
 
-redis = Redis(**REDIS_CONFIG)
+redis = Redis(**CONFIG.REDIS)
 #redis.set_response_callback('hmget', lambda i: [loads(v) for v in i])
 #d = {'a': '31'}
 #d = mongo['c'].find_one({'_id': 1})#, {'_id': 0})
@@ -64,7 +64,7 @@ read_row = lambda *query: _execute_(*query).fetchone()
 read_table = lambda *query: _execute_(*query).fetchall()
 
 
-connection = connect(**SQL_CONFIG)
+connection = connect(**CONFIG.SQL)
 connection.autocommit = True
 #connection.cursor(cursor_factory=RealDictCursor)
 with connection.cursor() as cursor:
@@ -86,7 +86,7 @@ print('>PID:', getpid())
 app = Flask(__name__, static_folder='file')
 app.jinja_env.line_statement_prefix = '#'
 G = app.jinja_env.globals
-CONFIG = app.config
+#CONFIG = app.config
 DEFAULT_LANGUAGE = 'fa'
 ALLOWED_INACTIVITY = 6 * 60
 # Database specific configurations
@@ -101,9 +101,10 @@ LOG = app.logger.info
 new_user_lock = Semaphore()
 chdir(app.root_path)
 # Allowed resources
-CSP_DIRECTIVES = {'connect': ['geolocation-db.com'], 'img': [], 'font': ['fonts.gstatic.com'], 'script': [], 'style': ['fonts.googleapis.com']}
-CONFIG['Content-Security-Policy'] = 'default-src \'none\';' + ' '.join('%s-src %s;' % (name, ' '.join(['\'self\''] + value)) for name, value in CSP_DIRECTIVES.items())
-# CONFIG['Content-Security-Policy'] = ''
+CSP = 'default-src \'none\'; ' + ' '.join('%s %s;' % (name, ' '.join(['\'self\''] + value)) for name, value in CONFIG.CSP_DIRECTIVES.items())
+#CSP = ''
+
+
 # Utility functions
 hash_string = lambda string: b32hexencode(sha1(string.encode()).digest()).decode()
 uuid = lambda prefix='': prefix + b32hexencode(urandom(20)).decode()
@@ -220,6 +221,8 @@ def csrf_protection():
 
 @app.after_request
 def finalize_response(response):
+	if 'Content-Type' in response.headers:
+		print('>', request.url, [i for i in request.headers.keys()])
 	if request.endpoint == 'static':
 		response.headers['X-Content-Type-Options'] = 'nosniff'
 	else:
@@ -238,8 +241,8 @@ def finalize_response(response):
 					del USERS[g.uuid]
 				if 'Set-Cookie' not in response.headers:
 					response.delete_cookie('UUID')
-		response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-		response.headers['Content-Security-Policy'] = CONFIG['Content-Security-Policy']
+		#response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+		response.headers['Content-Security-Policy'] = CSP
 		# response.headers['Strict-Transport-Security'] = 'max-age=604800; includeSubDomains; preload'
 		POOL.putconn(g.connection)
 	return response
@@ -369,7 +372,7 @@ def static_from_root():
 def fav():
 	return send_file('./file/favicon.svg')
 
-POOL = CreatePool(1, 100, **SQL_CONFIG)
+POOL = CreatePool(1, 100, **CONFIG.SQL)
 with app.app_context():
 	# Install error handlers
 	for code in 401, 404, 501:
@@ -390,9 +393,19 @@ for scheduled_function in __SCHEDULED_FUNCTIONS__:
 	Thread(target=scheduled_function, daemon=True).start()
 run_at_exit(__STOP_SCHEDULER__.set)
 
+'''
+with app.app_context():
+	print('\n\n\n\n\n\n\n\n\n\n')
+	print('>', type(G))
+	for i, j in G.items():
+		print(i, '->>', j)
+
+'''
+
+
 if __name__ == '__main__':
 	#app.run(debug=True)
 	#app.run(host='0.0.0.0', debug=True)
 	#print('!!!!!!!')
 	from waitress import serve
-	serve(app, listen='*:80')
+	serve(app, listen='*:8001')
